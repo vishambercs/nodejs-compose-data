@@ -39,9 +39,9 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome to bezkoder application." });
 });
 
-app.get('/api/v1/users/:username', (req, res) => {
+app.get('/users', (req, res) => {
   try {
-    const username = req.params.username
+    const username = "Bret"
     client.get(username, async (err, cache_data) => {
       if (cache_data) {
         return res.status(200).send({
