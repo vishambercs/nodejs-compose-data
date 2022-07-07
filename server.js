@@ -2,7 +2,12 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const app = express();
-
+const axios = require('axios')
+const redis = require('redis')
+const REDIS_PORT = process.env.REDIS_PORT || 6379
+const client = redis.createClient(REDIS_PORT)
+client.on('connect', () => console.log(`Redis is connected on port ${REDIS_PORT}`))
+client.on("error", (error) => console.error(error))
 var corsOptions = {
   origin: "http://localhost:8081"
 };
@@ -33,6 +38,29 @@ db.mongoose
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to bezkoder application." });
 });
+
+app.get('/api/v1/users/:username', (req, res) => {
+  try {
+    const username = req.params.username
+    client.get(username, async (err, cache_data) => {
+      if (cache_data) {
+        return res.status(200).send({
+          message: `Retrieved ${username}'s data from the cache`,
+          users: JSON.parse(cache_data)
+        })
+      } else {
+        const api = await axios.get(`https://jsonplaceholder.typicode.com/users/?username=${username}`)
+        client.setex(username, 1440, JSON.stringify(api.data))
+        return res.status(200).send({
+          message: `Retrieved ${username}'s data from the server`,
+          users: api.data
+        })
+      }
+    })
+  } catch (error) {
+    console.log(error)
+  }
+})
 
 require("./app/routes/turorial.routes")(app);
 

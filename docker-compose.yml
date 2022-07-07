@@ -11,10 +11,19 @@ services:
       - $MONGODB_LOCAL_PORT:$MONGODB_DOCKER_PORT
     volumes:
       - db:/data/db
+
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis
+    restart: unless-stopped
+    network_mode: bridge
+    expose:
+      - 6379   
+       
   app:
     depends_on:
       - mongodb
-    build: ./bezkoder-app
+    build: .
     restart: unless-stopped
     env_file: ./.env
     ports:
